@@ -17,8 +17,8 @@ class FinancialEngineError(ValueError):
 class InvalidParameterError(FinancialEngineError):
     """A numeric parameter is outside its valid domain.
 
-    Shared by modules whose inputs are simple scalars (e.g. projection, fire),
-    so callers see one error type for "you passed a bad value". Modules with
-    domain-specific failure modes (e.g. XIRR's cash-flow shape) keep their own
-    error types.
+    Shared by modules whose inputs are simple scalars (e.g. projection, fire,
+    swp), so callers see one error type for "you passed a bad value". Modules
+    with domain-specific failure modes (e.g. XIRR's cash-flow shape) keep their
+    own error types.
     """

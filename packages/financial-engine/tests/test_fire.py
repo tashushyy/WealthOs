@@ -98,9 +98,19 @@ def test_coast_rejects_return_at_or_below_minus_one() -> None:
         coast_fire_number(1000.0, -1.0, 5.0)
 
 
+def test_coast_rejects_negative_years() -> None:
+    with pytest.raises(InvalidParameterError):
+        coast_fire_number(1000.0, 0.05, -1.0)
+
+
 def test_barista_rejects_negative_expenses() -> None:
     with pytest.raises(InvalidParameterError):
         barista_fire_number(-1.0, 1000.0)
+
+
+def test_barista_rejects_negative_income() -> None:
+    with pytest.raises(InvalidParameterError):
+        barista_fire_number(40_000.0, -1.0)
 
 
 def test_barista_rejects_bad_withdrawal_rate() -> None:
@@ -113,24 +123,14 @@ def test_progress_rejects_negative_current() -> None:
         fire_progress(-1.0, 1000.0)
 
 
-def test_years_to_target_rejects_negative_target() -> None:
-    with pytest.raises(InvalidParameterError):
-        years_to_target(0.0, 100.0, 0.05, -1.0)
-
-
-def test_coast_rejects_negative_years() -> None:
-    with pytest.raises(InvalidParameterError):
-        coast_fire_number(1000.0, 0.05, -1.0)
-
-
-def test_barista_rejects_negative_income() -> None:
-    with pytest.raises(InvalidParameterError):
-        barista_fire_number(40_000.0, -1.0)
-
-
 def test_progress_rejects_non_positive_target() -> None:
     with pytest.raises(InvalidParameterError):
         fire_progress(100.0, 0.0)
+
+
+def test_years_to_target_rejects_negative_target() -> None:
+    with pytest.raises(InvalidParameterError):
+        years_to_target(0.0, 100.0, 0.05, -1.0)
 
 
 def test_years_to_target_rejects_non_positive_max_years() -> None:
