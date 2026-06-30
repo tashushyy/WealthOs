@@ -12,6 +12,14 @@ from financial_engine.cagr import (
     cagr,
     cagr_between,
 )
+from financial_engine.errors import FinancialEngineError
+from financial_engine.projection import (
+    InvalidParameterError,
+    ProjectionError,
+    YearSnapshot,
+    future_value,
+    projection_schedule,
+)
 from financial_engine.xirr import (
     Cashflow,
     ConvergenceError,
@@ -24,10 +32,16 @@ __all__ = [
     "CagrError",
     "Cashflow",
     "ConvergenceError",
+    "FinancialEngineError",
     "InvalidCashflowsError",
+    "InvalidParameterError",
     "InvalidValueError",
+    "ProjectionError",
     "XirrError",
+    "YearSnapshot",
     "cagr",
     "cagr_between",
+    "future_value",
+    "projection_schedule",
     "xirr",
 ]

@@ -19,6 +19,8 @@ from __future__ import annotations
 
 from datetime import date
 
+from financial_engine.errors import FinancialEngineError
+
 DAYS_PER_YEAR: float = 365.0
 """Day-count denominator, consistent with the XIRR module."""
 
@@ -26,7 +28,7 @@ _TOTAL_LOSS_RATE: float = -1.0
 """CAGR when the ending value is zero (a 100% loss)."""
 
 
-class CagrError(ValueError):
+class CagrError(FinancialEngineError):
     """Base class for all CAGR errors."""
 
 

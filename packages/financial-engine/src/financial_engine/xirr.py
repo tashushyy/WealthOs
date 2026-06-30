@@ -27,6 +27,8 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import date
 
+from financial_engine.errors import FinancialEngineError
+
 # --- Numerical constants (no magic numbers in the algorithm below) -----------
 
 DAYS_PER_YEAR: float = 365.0
@@ -77,7 +79,7 @@ _DERIVATIVE_EPSILON: float = 1e-12
 # --- Public types ------------------------------------------------------------
 
 
-class XirrError(ValueError):
+class XirrError(FinancialEngineError):
     """Base class for all XIRR errors."""
 
 
