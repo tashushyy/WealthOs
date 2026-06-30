@@ -23,17 +23,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from financial_engine.errors import FinancialEngineError
+from financial_engine.errors import InvalidParameterError
 
 MONTHS_PER_YEAR: int = 12
 
-
-class ProjectionError(FinancialEngineError):
-    """Base class for all projection errors."""
-
-
-class InvalidParameterError(ProjectionError):
-    """A projection input is outside its valid domain."""
+__all__ = [
+    "InvalidParameterError",
+    "YearSnapshot",
+    "future_value",
+    "projection_schedule",
+]
 
 
 @dataclass(frozen=True)
