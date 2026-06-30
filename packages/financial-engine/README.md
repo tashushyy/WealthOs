@@ -12,7 +12,7 @@ reports without dragging in side effects.
 | Module   | Status | Purpose                                              |
 | -------- | ------ | ---------------------------------------------------- |
 | `xirr`   | ✅     | Annualized money-weighted return on irregular dates. |
-| `cagr`   | ⏳     | Compound annual growth rate.                         |
+| `cagr`   | ✅     | Compound annual growth rate (smoothed, first-to-last).|
 | `fire`   | ⏳     | Lean / Coast / Regular / Fat / Barista FIRE.         |
 | `swp`    | ⏳     | Systematic withdrawal plan + corpus survival.        |
 | ...      | ⏳     | See roadmap.                                         |
@@ -52,6 +52,30 @@ is independent of the initial `guess`.
 - `InvalidCashflowsError` — fewer than two flows, or no sign change (a series
   with no money in *or* no money out has no return).
 - `ConvergenceError` — no real rate could be bracketed/found.
+
+## CAGR
+
+CAGR is the smoothed annual rate from a first value to a last value, ignoring
+the timing of anything in between:
+
+```
+CAGR = (end / begin) ^ (1 / years) - 1
+```
+
+Reach for CAGR for the headline "what steady annual return matches this growth"
+figure, and for XIRR when intermediate contributions and withdrawals matter.
+
+```python
+from datetime import date
+from financial_engine import cagr, cagr_between
+
+cagr(1000.0, 2000.0, 2.0)                                   # -> 0.414214 (doubled in 2y)
+cagr_between(1000.0, 1200.0, date(2023, 1, 1), date(2024, 1, 1))  # actual/365 day count
+```
+
+A total loss (`end == 0`) returns `-1.0`. `InvalidValueError` is raised for a
+non-positive `begin`, a negative `end`, a non-positive `years`, or end-not-after
+-start dates.
 
 ## Development
 
