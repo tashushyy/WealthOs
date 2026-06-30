@@ -11,11 +11,15 @@ reports without dragging in side effects.
 
 | Module   | Status | Purpose                                              |
 | -------- | ------ | ---------------------------------------------------- |
-| `xirr`   | ✅     | Annualized money-weighted return on irregular dates. |
-| `cagr`   | ✅     | Compound annual growth rate (smoothed, first-to-last).|
-| `fire`   | ⏳     | Lean / Coast / Regular / Fat / Barista FIRE.         |
-| `swp`    | ⏳     | Systematic withdrawal plan + corpus survival.        |
-| ...      | ⏳     | See roadmap.                                         |
+| `xirr`       | ✅ | Annualized money-weighted return on irregular dates.   |
+| `cagr`       | ✅ | Compound annual growth rate (smoothed, first-to-last). |
+| `projection` | ✅ | Future value of a lump sum + monthly SIP (with step-up).|
+| `fire`       | ⏳ | Lean / Coast / Regular / Fat / Barista FIRE.           |
+| `swp`        | ⏳ | Systematic withdrawal plan + corpus survival.          |
+| ...          | ⏳ | See roadmap.                                            |
+
+All modules raise errors deriving from `FinancialEngineError` (itself a
+`ValueError`), so callers can catch engine problems broadly or by specific type.
 
 ## XIRR
 
@@ -76,6 +80,24 @@ cagr_between(1000.0, 1200.0, date(2023, 1, 1), date(2024, 1, 1))  # actual/365 d
 A total loss (`end == 0`) returns `-1.0`. `InvalidValueError` is raised for a
 non-positive `begin`, a negative `end`, a non-positive `years`, or end-not-after
 -start dates.
+
+## Projection
+
+Future value of a starting lump sum plus a monthly SIP, with an optional annual
+step-up of the contribution. The annual return is converted to an effective
+monthly rate, contributions are end-of-month, and the math is an exact
+month-by-month loop (correct even at zero return and for the step-up case).
+
+```python
+from financial_engine import future_value, projection_schedule
+
+future_value(100_000, 10_000, 0.12, 20, annual_step_up=0.10)  # final value
+schedule = projection_schedule(100_000, 10_000, 0.12, 20)     # per-year snapshots
+schedule[-1].value, schedule[-1].contributed                  # for growth charts
+```
+
+`InvalidParameterError` is raised for a negative principal/contribution/step-up,
+an annual return at or below -100%, or a non-positive number of years.
 
 ## Development
 
