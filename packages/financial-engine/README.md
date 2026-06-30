@@ -14,7 +14,7 @@ reports without dragging in side effects.
 | `xirr`       | ✅ | Annualized money-weighted return on irregular dates.   |
 | `cagr`       | ✅ | Compound annual growth rate (smoothed, first-to-last). |
 | `projection` | ✅ | Future value of a lump sum + monthly SIP (with step-up).|
-| `fire`       | ⏳ | Lean / Coast / Regular / Fat / Barista FIRE.           |
+| `fire`       | ✅ | FIRE targets (Lean/Regular/Fat/Coast/Barista) + progress.|
 | `swp`        | ⏳ | Systematic withdrawal plan + corpus survival.          |
 | ...          | ⏳ | See roadmap.                                            |
 
@@ -98,6 +98,30 @@ schedule[-1].value, schedule[-1].contributed                  # for growth chart
 
 `InvalidParameterError` is raised for a negative principal/contribution/step-up,
 an annual return at or below -100%, or a non-positive number of years.
+
+## FIRE
+
+Corpus targets for the FIRE variants and progress tracking. The 4% safe
+withdrawal rate (the 25x-expenses rule) is the default assumption.
+
+```python
+from financial_engine import (
+    fire_number, coast_fire_number, barista_fire_number,
+    fire_progress, years_to_target,
+)
+
+fire_number(40_000)                       # 1_000_000  (Regular; Lean/Fat = lower/higher expenses)
+coast_fire_number(1_000_000, 0.07, 30)    # amount needed today to coast to the target
+barista_fire_number(40_000, 20_000)       # corpus for expenses not met by part-time income
+fire_progress(250_000, 1_000_000)         # 0.25
+years_to_target(250_000, 10_000, 0.10, 1_000_000)  # whole years to reach it (built on projection)
+```
+
+Lean, Regular, and Fat FIRE are `fire_number` with lower, baseline, or higher
+expense figures. `years_to_target` returns `0` if already met, the year the
+target is first reached, or `None` if not reached within `max_years`.
+`InvalidParameterError` covers negative inputs, a withdrawal rate outside
+`(0, 1]`, and a return at or below -100%.
 
 ## Development
 
