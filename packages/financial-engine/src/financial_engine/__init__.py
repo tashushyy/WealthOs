@@ -12,13 +12,24 @@ from financial_engine.cagr import (
     cagr,
     cagr_between,
 )
-from financial_engine.errors import FinancialEngineError
+from financial_engine.errors import FinancialEngineError, InvalidParameterError
+from financial_engine.fire import (
+    barista_fire_number,
+    coast_fire_number,
+    fire_number,
+    fire_progress,
+    years_to_target,
+)
 from financial_engine.projection import (
-    InvalidParameterError,
-    ProjectionError,
     YearSnapshot,
     future_value,
     projection_schedule,
+)
+from financial_engine.swp import (
+    SwpYearSnapshot,
+    corpus_survival,
+    sustainable_withdrawal,
+    swp_schedule,
 )
 from financial_engine.xirr import (
     Cashflow,
@@ -36,12 +47,20 @@ __all__ = [
     "InvalidCashflowsError",
     "InvalidParameterError",
     "InvalidValueError",
-    "ProjectionError",
+    "SwpYearSnapshot",
     "XirrError",
     "YearSnapshot",
+    "barista_fire_number",
     "cagr",
     "cagr_between",
+    "coast_fire_number",
+    "corpus_survival",
+    "fire_number",
+    "fire_progress",
     "future_value",
     "projection_schedule",
+    "sustainable_withdrawal",
+    "swp_schedule",
     "xirr",
+    "years_to_target",
 ]

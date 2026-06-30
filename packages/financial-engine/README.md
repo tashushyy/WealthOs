@@ -14,8 +14,8 @@ reports without dragging in side effects.
 | `xirr`       | ✅ | Annualized money-weighted return on irregular dates.   |
 | `cagr`       | ✅ | Compound annual growth rate (smoothed, first-to-last). |
 | `projection` | ✅ | Future value of a lump sum + monthly SIP (with step-up).|
-| `fire`       | ⏳ | Lean / Coast / Regular / Fat / Barista FIRE.           |
-| `swp`        | ⏳ | Systematic withdrawal plan + corpus survival.          |
+| `fire`       | ✅ | FIRE targets (Lean/Regular/Fat/Coast/Barista) + progress.|
+| `swp`        | ✅ | Withdrawal plan: corpus survival + sustainable amount. |
 | ...          | ⏳ | See roadmap.                                            |
 
 All modules raise errors deriving from `FinancialEngineError` (itself a
@@ -98,6 +98,46 @@ schedule[-1].value, schedule[-1].contributed                  # for growth chart
 
 `InvalidParameterError` is raised for a negative principal/contribution/step-up,
 an annual return at or below -100%, or a non-positive number of years.
+
+## FIRE
+
+Corpus targets for the FIRE variants and progress tracking. The 4% safe
+withdrawal rate (the 25x-expenses rule) is the default assumption.
+
+```python
+from financial_engine import (
+    fire_number, coast_fire_number, barista_fire_number,
+    fire_progress, years_to_target,
+)
+
+fire_number(40_000)                       # 1_000_000  (Regular; Lean/Fat = lower/higher expenses)
+coast_fire_number(1_000_000, 0.07, 30)    # amount needed today to coast to the target
+barista_fire_number(40_000, 20_000)       # corpus for expenses not met by part-time income
+fire_progress(250_000, 1_000_000)         # 0.25
+years_to_target(250_000, 10_000, 0.10, 1_000_000)  # whole years to reach it (built on projection)
+```
+
+Lean, Regular, and Fat FIRE are `fire_number` with lower, baseline, or higher
+expense figures. `years_to_target` returns `0` if already met, the year reached,
+or `None` if not reached within `max_years`.
+
+## SWP (withdrawals)
+
+The decumulation counterpart to projection. Monthly compounding, end-of-month
+withdrawals that are inflation-adjusted annually.
+
+```python
+from financial_engine import corpus_survival, swp_schedule, sustainable_withdrawal
+
+corpus_survival(10_000_000, 50_000, 0.08, annual_inflation=0.06)  # months funded, or None
+swp_schedule(10_000_000, 50_000, 0.08, 0.06, 30)                  # per-year balance + withdrawn
+sustainable_withdrawal(10_000_000, 0.08, 0.06, 30)               # monthly amount that lasts 30y
+```
+
+`corpus_survival` returns the number of months fully funded, or `None` if the
+corpus outlasts the horizon. `sustainable_withdrawal` solves (by bisection) for
+the starting monthly withdrawal that depletes the corpus exactly at the horizon.
+Tax is deliberately out of scope; gross up a net withdrawal as `net / (1 - t)`.
 
 ## Development
 

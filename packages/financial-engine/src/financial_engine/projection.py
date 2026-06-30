@@ -23,17 +23,15 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from financial_engine.errors import FinancialEngineError
+from financial_engine.compounding import MONTHS_PER_YEAR, effective_monthly_rate
+from financial_engine.errors import InvalidParameterError
 
-MONTHS_PER_YEAR: int = 12
-
-
-class ProjectionError(FinancialEngineError):
-    """Base class for all projection errors."""
-
-
-class InvalidParameterError(ProjectionError):
-    """A projection input is outside its valid domain."""
+__all__ = [
+    "InvalidParameterError",
+    "YearSnapshot",
+    "future_value",
+    "projection_schedule",
+]
 
 
 @dataclass(frozen=True)
@@ -50,11 +48,6 @@ class YearSnapshot:
     year: int
     contributed: float
     value: float
-
-
-def _monthly_rate(annual_return: float) -> float:
-    """Effective monthly rate equivalent to ``annual_return`` per year."""
-    return (1.0 + annual_return) ** (1.0 / MONTHS_PER_YEAR) - 1.0
 
 
 def _validate(
@@ -101,7 +94,7 @@ def projection_schedule(
     """
     _validate(principal, monthly_contribution, annual_return, years, annual_step_up)
 
-    rate = _monthly_rate(annual_return)
+    rate = effective_monthly_rate(annual_return)
     balance = principal
     contribution = monthly_contribution
     contributed_total = 0.0
