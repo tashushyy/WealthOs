@@ -9,7 +9,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import fire, market, portfolio, projection, swp
+from app.routers import fire, market, paytm, portfolio, projection, swp
 
 app = FastAPI(title="WealthOS API", version="0.1.0")
 
@@ -27,6 +27,7 @@ app.include_router(fire.router)
 app.include_router(swp.router)
 app.include_router(portfolio.router)
 app.include_router(market.router)
+app.include_router(paytm.router)
 
 
 @app.get("/health", tags=["meta"])

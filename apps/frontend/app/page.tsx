@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   CartesianGrid,
   Legend,
@@ -39,6 +39,16 @@ const TABS: { id: Tab; label: string }[] = [
 
 export default function Home() {
   const [tab, setTab] = useState<Tab>("projection");
+
+  // Restore the last-viewed tab on load, and remember it across refreshes.
+  useEffect(() => {
+    const saved = localStorage.getItem("wealthos.tab");
+    if (saved && TABS.some((t) => t.id === saved)) setTab(saved as Tab);
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("wealthos.tab", tab);
+  }, [tab]);
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-12">
@@ -79,10 +89,19 @@ export default function Home() {
       </div>
 
       <div className="mt-8">
-        {tab === "projection" && <ProjectionPanel />}
-        {tab === "fire" && <FirePanel />}
-        {tab === "swp" && <SwpPanel />}
-        {tab === "portfolio" && <PortfolioPanel />}
+        {/* All panels stay mounted so switching tabs preserves what you filled in. */}
+        <div className={tab === "projection" ? "" : "hidden"}>
+          <ProjectionPanel />
+        </div>
+        <div className={tab === "fire" ? "" : "hidden"}>
+          <FirePanel />
+        </div>
+        <div className={tab === "swp" ? "" : "hidden"}>
+          <SwpPanel />
+        </div>
+        <div className={tab === "portfolio" ? "" : "hidden"}>
+          <PortfolioPanel />
+        </div>
       </div>
 
       <HowToRead tab={tab} />
@@ -503,16 +522,33 @@ type Row = {
   kind: string;
   amount: string;
   returnPct: string;
+  loading?: boolean;
 };
 
 function newKey(): string {
   return Math.random().toString(36).slice(2);
 }
 
+const KIND_LABELS: Record<string, string> = {
+  mutual_fund: "Mutual fund",
+  stock: "Stock",
+  etf: "ETF",
+  commodity: "Commodity",
+  index: "Index",
+  currency: "Currency",
+  crypto: "Crypto",
+  other: "Other",
+};
+
+function kindLabel(kind: string): string {
+  return KIND_LABELS[kind] ?? kind;
+}
+
 function PortfolioPanel() {
   const [rows, setRows] = useState<Row[]>([]);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<InstrumentResult[]>([]);
+  const [filter, setFilter] = useState<string>("all");
   const [searching, setSearching] = useState(false);
   const [summary, setSummary] = useState<PortfolioResponse | null>(null);
   const [growth, setGrowth] = useState<ProjectionResponse | null>(null);
@@ -530,6 +566,7 @@ function PortfolioPanel() {
     setError(null);
     try {
       setResults(await getJson<InstrumentResult[]>("/api/instruments/search", { q: query }));
+      setFilter("all");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Search failed");
     } finally {
@@ -537,20 +574,57 @@ function PortfolioPanel() {
     }
   }
 
-  async function addFromSearch(item: InstrumentResult) {
-    let returnPct = "";
-    try {
-      const quote = await getJson<QuoteResult>("/api/instruments/quote", { id: item.id });
-      if (quote.expected_return != null) returnPct = (quote.expected_return * 100).toFixed(1);
-    } catch {
-      // Leave the return blank for manual entry if the quote lookup fails.
+  // Fetch a holding's trailing-CAGR return in the background, retrying a few
+  // times because the upstream providers (Yahoo especially) time out sporadically.
+  async function fetchReturn(key: string, id: string) {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const quote = await getJson<QuoteResult>("/api/instruments/quote", { id });
+        if (quote.expected_return != null) {
+          const pct = (quote.expected_return * 100).toFixed(1);
+          setRows((prev) =>
+            prev.map((r) => (r.key === key ? { ...r, returnPct: pct, loading: false } : r)),
+          );
+          return;
+        }
+        break; // provider responded but had no computable return — stop retrying
+      } catch {
+        await new Promise((resolve) => setTimeout(resolve, 400)); // transient — retry
+      }
     }
+    setRows((prev) => prev.map((r) => (r.key === key ? { ...r, loading: false } : r)));
+  }
+
+  function addFromSearch(item: InstrumentResult) {
+    const key = newKey();
     setRows((prev) => [
       ...prev,
-      { key: newKey(), id: item.id, name: item.name, kind: item.kind, amount: "100000", returnPct },
+      {
+        key,
+        id: item.id,
+        name: item.name,
+        kind: item.kind,
+        amount: "100000",
+        returnPct: "",
+        loading: true,
+      },
     ]);
     setResults([]);
     setQuery("");
+    void fetchReturn(key, item.id);
+  }
+
+  function refetchReturn(key: string, id: string) {
+    setRows((prev) => prev.map((r) => (r.key === key ? { ...r, loading: true } : r)));
+    void fetchReturn(key, id);
+  }
+
+  // Re-fetch returns for every searched holding at once (fills blanks + refreshes).
+  function refreshAll() {
+    setRows((prev) => prev.map((r) => (r.id ? { ...r, loading: true } : r)));
+    for (const r of rows) {
+      if (r.id) void fetchReturn(r.key, r.id);
+    }
   }
 
   function addManual() {
@@ -604,6 +678,52 @@ function PortfolioPanel() {
     }
   }
 
+  async function importFromPaytm() {
+    setError(null);
+    try {
+      const status = await getJson<{ configured: boolean; sdk_installed: boolean }>(
+        "/api/paytm/status",
+        {},
+      );
+      if (!status.sdk_installed) {
+        setError(
+          "Paytm SDK isn't installed on the backend. Run: pip install git+https://github.com/paytmmoney/pyPMClient.git",
+        );
+        return;
+      }
+      if (!status.configured) {
+        const apiKey = window.prompt("Paytm Money API key:");
+        if (!apiKey) return;
+        const apiSecret = window.prompt("Paytm Money API secret:");
+        if (!apiSecret) return;
+        await postJson("/api/paytm/config", { api_key: apiKey, api_secret: apiSecret });
+      }
+      const { url } = await getJson<{ url: string }>("/api/paytm/login-url", {});
+      window.open(url, "_blank", "noopener");
+      const token = window.prompt(
+        "After logging in on Paytm, paste the request_token from the redirected URL:",
+      );
+      if (!token) return;
+      const res = await postJson<{ holdings: { name: string; amount: number }[] }>(
+        "/api/paytm/holdings",
+        { request_token: token },
+      );
+      setRows((prev) => [
+        ...prev,
+        ...res.holdings.map((h) => ({
+          key: newKey(),
+          id: null,
+          name: h.name,
+          kind: "paytm",
+          amount: String(Math.round(h.amount)),
+          returnPct: "",
+        })),
+      ]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Paytm import failed");
+    }
+  }
+
   return (
     <div className="space-y-8">
       <Card>
@@ -628,30 +748,56 @@ function PortfolioPanel() {
           >
             + Manual
           </button>
+          <button
+            type="button"
+            onClick={importFromPaytm}
+            className="rounded-xl border border-white/15 px-4 font-medium text-white transition hover:border-[#d97760]"
+          >
+            Import from Paytm
+          </button>
         </form>
 
         {results.length > 0 && (
-          <ul className="mt-4 divide-y divide-white/5 rounded-xl border border-white/10">
-            {results.map((item) => (
-              <li key={item.id} className="flex items-center justify-between gap-3 px-4 py-2">
-                <div className="min-w-0">
-                  <p className="truncate text-sm text-white">{item.name}</p>
-                  <p className="text-xs text-neutral-500">{item.kind.replace("_", " ")}</p>
-                </div>
+          <>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {["all", ...Array.from(new Set(results.map((r) => r.kind)))].map((k) => (
                 <button
-                  onClick={() => addFromSearch(item)}
-                  className="shrink-0 rounded-lg bg-white/10 px-3 py-1 text-sm text-white hover:bg-[#d97760] hover:text-black"
+                  key={k}
+                  onClick={() => setFilter(k)}
+                  className={`rounded-full px-3 py-1 text-xs font-medium transition ${
+                    filter === k
+                      ? "bg-[#d97760] text-black"
+                      : "border border-white/15 text-neutral-300 hover:text-white"
+                  }`}
                 >
-                  Add
+                  {k === "all" ? "All" : kindLabel(k)}
                 </button>
-              </li>
-            ))}
-          </ul>
+              ))}
+            </div>
+            <ul className="mt-3 divide-y divide-white/5 rounded-xl border border-white/10">
+              {results
+                .filter((item) => filter === "all" || item.kind === filter)
+                .map((item) => (
+                  <li key={item.id} className="flex items-center justify-between gap-3 px-4 py-2">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm text-white">{item.name}</p>
+                      <p className="text-xs text-neutral-500">{kindLabel(item.kind)}</p>
+                    </div>
+                    <button
+                      onClick={() => addFromSearch(item)}
+                      className="shrink-0 rounded-lg bg-white/10 px-3 py-1 text-sm text-white hover:bg-[#d97760] hover:text-black"
+                    >
+                      Add
+                    </button>
+                  </li>
+                ))}
+            </ul>
+          </>
         )}
 
         {rows.length > 0 ? (
           <div className="mt-6 space-y-2">
-            <div className="grid grid-cols-[1fr_110px_90px_70px_32px] gap-2 px-1 text-xs uppercase tracking-wide text-neutral-500">
+            <div className="grid grid-cols-[1fr_100px_112px_52px_28px] gap-2 px-1 text-xs uppercase tracking-wide text-neutral-500">
               <span>Holding</span>
               <span>Amount (₹)</span>
               <span>Return %</span>
@@ -659,7 +805,7 @@ function PortfolioPanel() {
               <span />
             </div>
             {rows.map((r) => (
-              <div key={r.key} className="grid grid-cols-[1fr_110px_90px_70px_32px] items-center gap-2">
+              <div key={r.key} className="grid grid-cols-[1fr_100px_112px_52px_28px] items-center gap-2">
                 <input
                   value={r.name}
                   onChange={(e) => updateRow(r.key, "name", e.target.value)}
@@ -672,12 +818,25 @@ function PortfolioPanel() {
                   onChange={(e) => updateRow(r.key, "amount", e.target.value)}
                   className="rounded-lg border border-white/10 bg-neutral-900/60 px-2 py-1.5 text-sm text-white outline-none focus:border-[#d97760]"
                 />
-                <input
-                  type="number"
-                  value={r.returnPct}
-                  onChange={(e) => updateRow(r.key, "returnPct", e.target.value)}
-                  className="rounded-lg border border-white/10 bg-neutral-900/60 px-2 py-1.5 text-sm text-white outline-none focus:border-[#d97760]"
-                />
+                <div className="flex items-center gap-1">
+                  <input
+                    type="number"
+                    value={r.returnPct}
+                    onChange={(e) => updateRow(r.key, "returnPct", e.target.value)}
+                    placeholder={r.loading ? "…" : "%"}
+                    className="w-full rounded-lg border border-white/10 bg-neutral-900/60 px-2 py-1.5 text-sm text-white outline-none focus:border-[#d97760]"
+                  />
+                  {r.id && !r.loading && !r.returnPct && (
+                    <button
+                      type="button"
+                      onClick={() => refetchReturn(r.key, r.id as string)}
+                      title="Fetch return"
+                      className="shrink-0 text-neutral-400 hover:text-[#d97760]"
+                    >
+                      ↻
+                    </button>
+                  )}
+                </div>
                 <span className="text-sm text-neutral-400">
                   {total > 0 ? percent.format((Number(r.amount) || 0) / total) : "—"}
                 </span>
@@ -691,7 +850,19 @@ function PortfolioPanel() {
               </div>
             ))}
             <div className="flex items-center justify-between pt-2">
-              <span className="text-sm text-neutral-400">Total: {currency.format(total)}</span>
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-neutral-400">Total: {currency.format(total)}</span>
+                {rows.some((r) => r.id) && (
+                  <button
+                    type="button"
+                    onClick={refreshAll}
+                    title="Re-fetch live returns for all searched holdings"
+                    className="rounded-lg border border-white/15 px-2.5 py-1 text-xs text-neutral-300 transition hover:border-[#d97760] hover:text-white"
+                  >
+                    ↻ Refresh values
+                  </button>
+                )}
+              </div>
               <SubmitButtonInline loading={loading} onClick={calculate} />
             </div>
           </div>

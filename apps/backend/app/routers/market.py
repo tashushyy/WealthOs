@@ -86,16 +86,30 @@ def search_instruments(
     q: str = Query(min_length=1, description="Search text."),
     kind: str = Query("all", description="all | mf | market"),
 ) -> list[InstrumentResult]:
-    """Search mutual funds and/or stocks/ETFs/commodities."""
-    try:
-        results: list[InstrumentResult] = []
-        if kind in ("all", "mf"):
+    """Search mutual funds and/or stocks/ETFs/commodities.
+
+    Each provider is queried independently: if one is slow or unreachable (the
+    Yahoo endpoints are unofficial and can time out), results from the other are
+    still returned. A 502 is raised only when every attempted provider fails.
+    """
+    results: list[InstrumentResult] = []
+    errors: list[str] = []
+
+    if kind in ("all", "mf"):
+        try:
             results += _search_mutual_funds(q)
-        if kind in ("all", "market"):
+        except httpx.HTTPError as exc:
+            errors.append(f"funds: {exc}")
+
+    if kind in ("all", "market"):
+        try:
             results += _search_yahoo(q)
-        return results
-    except httpx.HTTPError as exc:
-        raise HTTPException(status_code=502, detail=f"Search provider error: {exc}") from exc
+        except httpx.HTTPError as exc:
+            errors.append(f"market: {exc}")
+
+    if not results and errors:
+        raise HTTPException(status_code=502, detail="; ".join(errors))
+    return results
 
 
 def _quote_mutual_fund(code: str) -> QuoteResult:
