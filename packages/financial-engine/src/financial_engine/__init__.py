@@ -20,6 +20,12 @@ from financial_engine.fire import (
     fire_progress,
     years_to_target,
 )
+from financial_engine.portfolio import (
+    Holding,
+    PortfolioSummary,
+    Weight,
+    summarize,
+)
 from financial_engine.projection import (
     YearSnapshot,
     future_value,
@@ -44,10 +50,13 @@ __all__ = [
     "Cashflow",
     "ConvergenceError",
     "FinancialEngineError",
+    "Holding",
     "InvalidCashflowsError",
     "InvalidParameterError",
     "InvalidValueError",
+    "PortfolioSummary",
     "SwpYearSnapshot",
+    "Weight",
     "XirrError",
     "YearSnapshot",
     "barista_fire_number",
@@ -59,6 +68,7 @@ __all__ = [
     "fire_progress",
     "future_value",
     "projection_schedule",
+    "summarize",
     "sustainable_withdrawal",
     "swp_schedule",
     "xirr",

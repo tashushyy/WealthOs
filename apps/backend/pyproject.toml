@@ -12,6 +12,7 @@ dependencies = [
     "fastapi>=0.110",
     "uvicorn[standard]>=0.29",
     "pydantic>=2.6",
+    "httpx>=0.27",
     # The financial engine is a local package; install it editable first:
     #   pip install -e packages/financial-engine
     "wealthos-financial-engine",

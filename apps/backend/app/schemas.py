@@ -84,3 +84,56 @@ class SwpResponse(BaseModel):
     survival_months: int | None
     sustainable_monthly: float
     points: list[SwpYearPoint]
+
+
+class HoldingInput(BaseModel):
+    """One position in a portfolio."""
+
+    name: str = Field(min_length=1, description="Fund/ticker/label.")
+    amount: float = Field(ge=0, description="Money allocated to this holding.")
+    expected_return: float = Field(gt=-1, description="Expected annual return, e.g. 0.12.")
+    volatility: float | None = Field(default=None, ge=0, description="Annual volatility, decimal.")
+
+
+class PortfolioRequest(BaseModel):
+    """A set of holdings to blend into one portfolio."""
+
+    holdings: list[HoldingInput] = Field(min_length=1)
+
+
+class WeightOut(BaseModel):
+    """A holding's share of the portfolio."""
+
+    name: str
+    weight: float
+
+
+class PortfolioResponse(BaseModel):
+    """The blended portfolio summary."""
+
+    total_invested: float
+    blended_return: float
+    blended_volatility: float | None
+    weights: list[WeightOut]
+
+
+class InstrumentResult(BaseModel):
+    """A search hit the user can add to their portfolio."""
+
+    id: str = Field(description="Opaque id, e.g. 'mf:118834' or 'yahoo:RELIANCE.NS'.")
+    name: str
+    kind: str = Field(description="mutual_fund | stock | etf | commodity | index | other")
+    symbol: str | None = None
+
+
+class QuoteResult(BaseModel):
+    """Latest price and a trailing-CAGR estimate of expected return."""
+
+    id: str
+    name: str
+    price: float | None
+    expected_return: float | None = Field(
+        default=None, description="Trailing CAGR over the window; past performance, not a forecast."
+    )
+    window_years: float | None = None
+    as_of: str | None = None
