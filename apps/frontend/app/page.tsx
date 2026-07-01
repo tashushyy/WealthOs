@@ -37,8 +37,27 @@ export default function Home() {
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-12">
-      <h1 className="text-3xl font-semibold tracking-tight">WealthOS</h1>
-      <p className="mt-1 text-slate-400">Plan your investments, independence, and withdrawals.</p>
+      <div className="flex items-center gap-3">
+        <svg
+          width="44"
+          height="44"
+          viewBox="0 0 100 100"
+          fill="none"
+          strokeWidth={7}
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <polygon points="50,10 68,28 50,46 32,28" stroke="#d97760" />
+          <polygon points="50,54 68,72 50,90 32,72" stroke="#d97760" />
+          <polygon points="28,32 46,50 28,68 10,50" stroke="#ffffff" />
+          <polygon points="72,32 90,50 72,68 54,50" stroke="#ffffff" />
+        </svg>
+        <span className="font-serif text-3xl font-semibold tracking-wide">
+          <span className="text-white">CODED</span>
+          <span className="text-[#d97760]">MIND</span>
+        </span>
+      </div>
+      <p className="mt-2 text-neutral-400">Plan your investments, independence, and withdrawals.</p>
 
       <div className="mt-6 flex gap-1 rounded-xl border border-white/10 bg-white/5 p-1">
         {TABS.map((t) => (
@@ -46,7 +65,7 @@ export default function Home() {
             key={t.id}
             onClick={() => setTab(t.id)}
             className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition ${
-              tab === t.id ? "bg-emerald-500 text-slate-950" : "text-slate-300 hover:text-white"
+              tab === t.id ? "bg-[#d97760] text-black" : "text-neutral-300 hover:text-white"
             }`}
           >
             {t.label}
@@ -151,12 +170,12 @@ function ProjectionPanel() {
                     labelFormatter={(label) => `Year ${label}`}
                   />
                   <Legend />
-                  <Line type="monotone" dataKey="value" name="Portfolio value" stroke="#34d399" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="value" name="Portfolio value" stroke="#d97760" strokeWidth={2} dot={false} />
                   <Line
                     type="monotone"
                     dataKey="contributed"
                     name="Invested"
-                    stroke="#64748b"
+                    stroke="#a3a3a3"
                     strokeWidth={2}
                     strokeDasharray="4 4"
                     dot={false}
@@ -246,14 +265,14 @@ function FirePanel() {
               />
             </div>
             <div>
-              <div className="mb-2 flex justify-between text-sm text-slate-400">
+              <div className="mb-2 flex justify-between text-sm text-neutral-400">
                 <span>Progress</span>
                 <span>{percent.format(result.progress)}</span>
               </div>
               <ProgressBar fraction={result.progress} />
             </div>
             {result.years_to_fire === null && (
-              <p className="text-sm text-slate-400">
+              <p className="text-sm text-neutral-400">
                 At the current contribution and return, the corpus does not reach the target within
                 100 years. Try a higher monthly investment or return.
               </p>
@@ -356,7 +375,7 @@ function SwpPanel() {
                     labelFormatter={(label) => `Year ${label}`}
                   />
                   <Legend />
-                  <Line type="monotone" dataKey="balance" name="Balance" stroke="#34d399" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="balance" name="Balance" stroke="#d97760" strokeWidth={2} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -372,14 +391,14 @@ function SwpPanel() {
 // --- shared ------------------------------------------------------------------
 
 const tooltipStyle = {
-  background: "#0f172a",
+  background: "#171717",
   border: "1px solid #ffffff1a",
   borderRadius: 12,
-  color: "#e2e8f0",
+  color: "#ffffff",
 } as const;
 
 function Placeholder({ text }: { text: string }) {
   return (
-    <div className="flex h-full min-h-72 items-center justify-center text-slate-500">{text}</div>
+    <div className="flex h-full min-h-72 items-center justify-center text-neutral-500">{text}</div>
   );
 }

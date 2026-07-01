@@ -21,13 +21,13 @@ export function Field({
 }) {
   return (
     <label className="block">
-      <span className="text-sm text-slate-400">{label}</span>
+      <span className="text-sm text-neutral-400">{label}</span>
       <input
         type="number"
         inputMode="decimal"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1 w-full rounded-xl border border-white/10 bg-slate-900/60 px-3 py-2 text-slate-100 outline-none focus:border-emerald-400"
+        className="mt-1 w-full rounded-xl border border-white/10 bg-neutral-900/60 px-3 py-2 text-white outline-none focus:border-[#d97760]"
       />
     </label>
   );
@@ -44,8 +44,8 @@ export function Stat({
 }) {
   return (
     <div>
-      <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
-      <p className={`mt-1 text-lg font-semibold ${accent ? "text-emerald-400" : "text-slate-100"}`}>
+      <p className="text-xs uppercase tracking-wide text-neutral-500">{label}</p>
+      <p className={`mt-1 text-lg font-semibold ${accent ? "text-[#d97760]" : "text-white"}`}>
         {value}
       </p>
     </div>
@@ -57,7 +57,7 @@ export function SubmitButton({ loading, label }: { loading: boolean; label: stri
     <button
       type="submit"
       disabled={loading}
-      className="w-full rounded-xl bg-emerald-500 py-2.5 font-medium text-slate-950 transition hover:bg-emerald-400 disabled:opacity-50"
+      className="w-full rounded-xl bg-[#d97760] py-2.5 font-medium text-black transition hover:bg-[#e08a76] disabled:opacity-50"
     >
       {loading ? "Calculating…" : label}
     </button>
@@ -67,9 +67,9 @@ export function SubmitButton({ loading, label }: { loading: boolean; label: stri
 export function ProgressBar({ fraction }: { fraction: number }) {
   const clamped = Math.max(0, Math.min(1, fraction));
   return (
-    <div className="h-3 w-full overflow-hidden rounded-full bg-slate-800">
+    <div className="h-3 w-full overflow-hidden rounded-full bg-neutral-800">
       <div
-        className="h-full rounded-full bg-emerald-500 transition-all"
+        className="h-full rounded-full bg-[#d97760] transition-all"
         style={{ width: `${clamped * 100}%` }}
       />
     </div>

@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "WealthOS",
-  description: "Wealth projection",
+  title: "Coded Mind",
+  description: "Plan your investments, independence, and withdrawals.",
 };
 
 export default function RootLayout({
@@ -13,7 +13,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-slate-950 text-slate-100 antialiased">
+      <body className="min-h-screen bg-black text-white antialiased">
         {children}
       </body>
     </html>

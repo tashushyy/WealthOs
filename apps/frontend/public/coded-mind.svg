@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 490 120" width="490" height="120" role="img" aria-label="CodedMind">
+  <title>CodedMind</title>
+  <!-- Icon: four outlined diamonds (light-background version) -->
+  <g transform="translate(14,15) scale(0.9)" fill="none" stroke-width="7" stroke-linejoin="round">
+    <polygon points="50,10 68,28 50,46 32,28" stroke="#d97760" />
+    <polygon points="50,54 68,72 50,90 32,72" stroke="#d97760" />
+    <polygon points="28,32 46,50 28,68 10,50" stroke="#111111" />
+    <polygon points="72,32 90,50 72,68 54,50" stroke="#111111" />
+  </g>
+  <!-- Wordmark -->
+  <text x="118" y="76" font-family="Georgia, 'Times New Roman', serif" font-size="48" font-weight="600" letter-spacing="1">
+    <tspan fill="#2b2b2b">CODED</tspan><tspan fill="#d97760">MIND</tspan>
+  </text>
+</svg>
