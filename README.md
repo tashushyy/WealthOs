@@ -72,3 +72,4 @@ cd ../frontend && npm run build
 - More API endpoints (FIRE, SWP) + a real dashboard with multiple cards.
 - Auth (Clerk) and persistence (Postgres + SQLAlchemy + Alembic) once the
   stack is proven.
+- new module
